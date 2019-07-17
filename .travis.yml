@@ -1,0 +1,26 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t adnanmayo/react-test -f ./client/Dockerfile.dev ./client
+
+scripts:
+  - docker run adnanmayo/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t adnanmayo/multi-client ./client
+  - docker build -t adnanmayo/multi-nginx ./nginx
+  - docker build -t adnanmayo/multi-server ./server
+  - docker build -t adnanmayo/multi-worker ./worker
+
+  # login to docker hun
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+
+  # push images to docker hub
+  - docker push adnanmayo/multi-client 
+  - docker push adnanmayo/multi-nginx 
+  - docker push adnanmayo/multi-server
+  - docker push adnanmayo/multi-worker
+
+  # take those images  and push it to docker hub
